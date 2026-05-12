@@ -1,38 +1,111 @@
-.App {
-  text-align: center;
+body{
+  margin:0;
+  background:#0f172a;
+  font-family:Arial;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.App{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.login{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  color:white;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.login button{
+  padding:12px 20px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  font-size:18px;
+  border-radius:10px;
+  cursor:pointer;
 }
 
-.App-link {
-  color: #61dafb;
+.header{
+  background:#111827;
+  color:white;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px 20px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.profile{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.profile img{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+}
+
+main{
+  flex:1;
+  overflow-y:auto;
+  padding:20px;
+}
+
+.message{
+  display:flex;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.message img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  margin-right:10px;
+}
+
+.message p{
+  padding:12px;
+  border-radius:10px;
+  max-width:300px;
+}
+
+.sent{
+  justify-content:flex-end;
+}
+
+.sent p{
+  background:#2563eb;
+  color:white;
+}
+
+.received p{
+  background:white;
+}
+
+.form{
+  display:flex;
+  padding:10px;
+  background:#111827;
+}
+
+.form input{
+  flex:1;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+}
+
+.form button{
+  margin-left:10px;
+  padding:12px 20px;
+  border:none;
+  background:#2563eb;
+  color:white;
+  border-radius:10px;
 }
