@@ -34,128 +34,28 @@ function App() {
   );
 }
 
+function SignIn() {
 
+  const signInWithGoogle = () => {
 
-  function SignIn() {
+    const provider = new firebase.auth.GoogleAuthProvider();
 
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [confirmObj, setConfirmObj] = useState(null);
+    auth.signInWithPopup(provider);
 
-  // SEND OTP
-const sendOTP = async () => {
-
-  try {
-
-    if(phone === ""){
-      alert("Enter phone number");
-      return;
-    }
-
-    if(!window.recaptchaVerifier){
-
-      window.recaptchaVerifier =
-        new firebase.auth.RecaptchaVerifier(
-          'recaptcha-container',
-          {
-            size: 'normal',
-            callback: (response) => {
-              console.log("Recaptcha verified");
-            }
-          }
-        );
-
-      await window.recaptchaVerifier.render();
-    }
-
-    const appVerifier = window.recaptchaVerifier;
-
-    const confirmation =
-      await auth.signInWithPhoneNumber(
-        phone,
-        appVerifier
-      );
-
-    setConfirmObj(confirmation);
-
-    alert("OTP Sent");
-
-  } catch(error) {
-
-    console.log(error);
-
-    alert(error.message);
-
-  }
-};
- 
-
-  
-
-  // VERIFY OTP
-
-  const verifyOTP = async () => {
-
-    try {
-
-      if(otp === ""){
-        alert("Enter OTP");
-        return;
-      }
-
-      await confirmObj.confirm(otp);
-
-      alert("Login Successful");
-
-    } catch(error) {
-
-      console.log(error);
-
-      alert("Invalid OTP");
-
-    }
   };
 
   return (
-
     <div className="login">
 
-      <h1>📱 My Chat App</h1>
+      <h1>🔥 My Chat App</h1>
 
-      <input
-        type="text"
-        placeholder="+91xxxxxxxxxx"
-        value={phone}
-        onChange={(e)=>setPhone(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={sendOTP}>
-        Send OTP
+      <button onClick={signInWithGoogle}>
+        Sign in with Google
       </button>
-
-      <br /><br />
-
-      <input
-        type="text"
-        placeholder="Enter OTP"
-        value={otp}
-        onChange={(e)=>setOtp(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={verifyOTP}>
-        Verify OTP
-      </button>
-
-      <div id="recaptcha-container"></div>
 
     </div>
   );
 }
-
 
 function ChatRoom() {
 
