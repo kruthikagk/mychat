@@ -70,22 +70,33 @@ function ChatRoom() {
   .limit(50);
 
   const [messages] = useCollectionData(query, { idField: 'id' });
+const sendMessage = async (e) => {
 
-  const sendMessage = async (e) => {
+  e.preventDefault();
 
-    e.preventDefault();
+  if(formValue.trim() === ""){
+    return;
+  }
 
-    const { uid, photoURL } = auth.currentUser;
+  const { uid, photoURL } =
+    auth.currentUser;
 
-    await messagesRef.add({
-      text: formValue,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      uid,
-      photoURL
-    });
+  await messagesRef.add({
 
-    setFormValue('');
-  };
+    text: formValue,
+
+    createdAt:
+      firebase.firestore.FieldValue.serverTimestamp(),
+
+    uid,
+
+    photoURL
+
+  });
+
+  setFormValue('');
+};
+  
 
   return (
     <>
