@@ -1,43 +1,331 @@
+
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Campus AR Navigator — Find your way around campus with AR navigation, live events and turn-by-turn directions." />
+  <title>CampusNav AR — College Navigation</title>
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
-  </head>
-  <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
-    <!--
-      This HTML file is a template.
-      If you open it directly in the browser, you will see an empty page.
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
-      You can add webfonts, meta tags, or analytics to this file.
-      The build step will place the bundled scripts into the <body> tag.
+  <!-- Our stylesheet -->
+  <link rel="stylesheet" href="layout.css" />
+</head>
+<body>
 
-      To begin the development, run `npm start` or `yarn start`.
-      To create a production bundle, use `npm run build` or `yarn build`.
-    -->
-  </body>
+<!-- ══════════════════════════════════════
+     HEADER
+══════════════════════════════════════ -->
+<header id="header">
+  <div class="logo-wrap">
+    <div class="logo-icon">🧭</div>
+    <div>
+      <div class="logo-text">CAMPUS<span>NAV</span></div>
+      <div class="logo-sub">AR Navigation System</div>
+    </div>
+  </div>
+
+  <div class="hdr-right">
+    <!-- Ctrl+K hint -->
+    <div class="hdr-btn" style="pointer-events:none;opacity:0.5">⌘K Search</div>
+
+    <button class="hdr-btn" id="login-btn" onclick="openLoginModal()">LOGIN</button>
+    <button class="hdr-btn" id="logout-btn" style="display:none" onclick="logout()">LOGOUT</button>
+
+    <button class="notif-bell" onclick="toggleNotifPanel()" title="Notifications">
+      🔔
+      <div class="notif-badge" id="notif-badge">0</div>
+    </button>
+
+    <div class="user-avatar" id="user-avatar" onclick="toggleNotifPanel()">YO</div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── SIDE PANEL ── -->
+  <div id="side-panel">
+
+    <!-- Search -->
+    <div class="search-area">
+      <div class="search-label">// Search Campus</div>
+      <div class="search-input-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="search-input"
+               placeholder="Auditorium, Library, CS Dept..." autocomplete="off" />
+        <button class="search-clear" id="search-clear">✕</button>
+      </div>
+      <div id="search-results"></div>
+    </div>
+
+    <!-- Navigation Inputs -->
+    <div class="nav-inputs">
+      <div class="nav-input-row">
+        <div class="nav-dot from"></div>
+        <input type="text" class="nav-input" id="from-input"
+               placeholder="From — tap 📍 for your location" />
+        <button class="locate-btn" onclick="centerOnUser()" title="Use my location">📍</button>
+      </div>
+      <div class="nav-input-row">
+        <div class="nav-dot to"></div>
+        <input type="text" class="nav-input" id="to-input"
+               placeholder="To — search or tap a building" />
+      </div>
+      <button class="nav-go-btn" onclick="startNavigation()">🧭 Get Directions</button>
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-walk" onclick="setNavMode('walk')">🚶 WALK</button>
+      <button class="mode-tab" id="tab-drive" onclick="setNavMode('drive')">🚗 DRIVE</button>
+      <button class="mode-tab" id="tab-accessible" onclick="setNavMode('accessible')">♿ ACCESS</button>
+    </div>
+
+    <!-- Panel Tab Buttons -->
+    <div class="mode-tabs" style="border-bottom:none;padding-top:6px;">
+      <button class="mode-tab panel-tab-btn active" id="ptab-explore"
+              onclick="showPanelTab('explore')">EXPLORE</button>
+      <button class="mode-tab panel-tab-btn" id="ptab-events"
+              onclick="showPanelTab('events')">EVENTS</button>
+      <button class="mode-tab panel-tab-btn" id="ptab-route"
+              onclick="showPanelTab('route')">ROUTE</button>
+    </div>
+
+    <!-- Panel Tab Contents -->
+    <div class="panel-section">
+
+      <!-- EXPLORE Tab -->
+      <div id="tab-content-explore" class="panel-tab-content">
+        <div class="section-hd">All Locations</div>
+        <div id="places-list"></div>
+      </div>
+
+      <!-- EVENTS Tab -->
+      <div id="tab-content-events" class="panel-tab-content" style="display:none">
+        <div class="section-hd" id="events-date-hd">Today's Events</div>
+        <div id="events-list"></div>
+      </div>
+
+      <!-- ROUTE Tab -->
+      <div id="tab-content-route" class="panel-tab-content" style="display:none">
+        <div id="route-panel" class="show" style="padding:0;border:none;background:none;display:block">
+          <p style="color:var(--muted);font-size:0.78rem;font-style:italic">
+            Select a destination to see turn-by-turn directions.
+          </p>
+          <div class="route-header" style="margin-top:14px;display:none" id="route-meta-row">
+            <div class="route-title">Route</div>
+            <div class="route-meta">
+              <span id="route-dist">—</span> · <span id="route-eta">—</span>
+            </div>
+          </div>
+          <div id="route-steps"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /side-panel -->
+
+  <!-- ── MAP AREA ── -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <!-- Current Location HUD -->
+    <div class="location-hud">
+      <div class="loc-dot"></div>
+      <span id="loc-hud-text">Acquiring location...</span>
+    </div>
+
+    <!-- Compass -->
+    <div class="hud-compass" title="Compass">
+      <div class="compass-needle"></div>
+    </div>
+
+    <!-- Map Controls -->
+    <div class="map-controls">
+      <button class="map-ctrl-btn" onclick="zoomIn()" title="Zoom in">＋</button>
+      <button class="map-ctrl-btn" onclick="zoomOut()" title="Zoom out">−</button>
+      <button class="map-ctrl-btn" onclick="centerOnUser()" title="My location">📍</button>
+      <button class="map-ctrl-btn" id="satellite-btn" onclick="toggleSatellite()" title="Satellite">🛰️</button>
+    </div>
+
+    <!-- AR Button -->
+    <button class="ar-toggle-btn" onclick="openAR()">
+      <span>📷</span> LAUNCH AR
+    </button>
+
+  </div><!-- /map-container -->
+
+</div><!-- /app -->
+
+<!-- ══════════════════════════════════════
+     EVENTS TICKER
+══════════════════════════════════════ -->
+<div id="events-ticker">
+  <div class="ticker-label">LIVE EVENTS</div>
+  <div class="ticker-track">
+    <div class="ticker-inner" id="ticker-inner">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     AR OVERLAY
+══════════════════════════════════════ -->
+<div id="ar-overlay">
+  <video id="ar-video" autoplay playsinline muted></video>
+
+  <div class="ar-hud">
+
+    <div class="ar-topbar">
+      <div>
+        <div class="ar-title">📷 AR NAVIGATION</div>
+      </div>
+      <button class="ar-close" onclick="closeAR()">✕</button>
+    </div>
+
+    <!-- Floating markers -->
+    <div id="ar-markers" style="position:absolute;inset:0;pointer-events:none;"></div>
+
+    <!-- Direction Arrow + Instruction -->
+    <div class="ar-arrows">
+      <div class="ar-direction-arrow" id="ar-direction-arrow">↑</div>
+      <div class="ar-instruction">
+        <div class="ar-inst-main" id="ar-inst-main">Continue straight ahead</div>
+        <div class="ar-inst-sub" id="ar-inst-sub">FOLLOW THE PATH</div>
+      </div>
+    </div>
+
+    <!-- Bottom destination info -->
+    <div class="ar-bottom">
+      <div class="ar-dest-info">
+        <div>
+          <div class="ar-dest-label">Navigating to</div>
+          <div class="ar-dest-name" id="ar-dest-name">—</div>
+        </div>
+        <div class="ar-eta">
+          <div class="ar-eta-val" id="ar-eta-val">—</div>
+          <div class="ar-eta-unit">MIN WALK</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     NOTIFICATION PANEL
+══════════════════════════════════════ -->
+<div id="notif-panel">
+  <div class="notif-panel-header">
+    <div class="notif-panel-title">🔔 Notifications</div>
+    <button class="notif-close" onclick="document.getElementById('notif-panel').classList.remove('open')">✕</button>
+  </div>
+  <div class="notif-list" id="notif-list">
+    <!-- Rendered by JS -->
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     LOGIN MODAL
+══════════════════════════════════════ -->
+<div id="login-modal">
+  <div class="modal-card">
+    <button class="modal-close-btn" onclick="closeLoginModal()">✕</button>
+    <div class="modal-logo">
+      <div class="modal-logo-icon">🧭</div>
+      <div class="modal-title">Sign In</div>
+      <div class="modal-sub">// CAMPUSNAV PORTAL</div>
+    </div>
+
+    <form id="login-form">
+      <div class="modal-field">
+        <label>Full Name</label>
+        <input type="text" id="login-name" placeholder="Arjun Kumar" autocomplete="name" />
+      </div>
+      <div class="modal-field">
+        <label>College ID / Roll Number</label>
+        <input type="text" id="login-id" placeholder="CS21B001" autocomplete="username" />
+      </div>
+      <div class="modal-field">
+        <label>Password</label>
+        <input type="password" id="login-pass" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button type="submit" class="modal-submit">LOGIN →</button>
+    </form>
+
+    <div class="modal-switch">
+      Don't have an account? <a onclick="showToast('Contact admin to register', 'info')">Contact Admin</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ROUTE PANEL (inside side panel for mobile)
+══════════════════════════════════════ -->
+
+<!-- ══════════════════════════════════════
+     TOAST CONTAINER
+══════════════════════════════════════ -->
+<div id="toast-container"></div>
+
+<!-- ══════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════ -->
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Our navigator -->
+<script src="navigator.js"></script>
+
+<script>
+// Fix route meta row visibility
+const _origRender = renderRoutePanel;
+function renderRoutePanel({ steps, totalDist, eta }) {
+  const panel = document.getElementById('route-panel');
+  const stepsEl = document.getElementById('route-steps');
+  const metaRow = document.getElementById('route-meta-row');
+
+  document.getElementById('route-dist').textContent =
+    totalDist >= 1000 ? `${(totalDist / 1000).toFixed(1)} km` : `${totalDist}m`;
+  document.getElementById('route-eta').textContent = eta;
+  if (metaRow) metaRow.style.display = 'flex';
+
+  stepsEl.innerHTML = steps.map((s, i) => `
+    <div class="route-step">
+      <div class="step-num">${i + 1}</div>
+      <div>
+        <div class="step-text">${s.text}</div>
+        <div class="step-dist">${s.dist}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Auto switch to route tab
+  showPanelTab('route');
+}
+
+// Panel tab initial setup
+document.querySelectorAll('.panel-tab-btn').forEach(b => {
+  b.addEventListener('click', function () {
+    document.querySelectorAll('.panel-tab-btn').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+// Events date header
+const today = new Date();
+const dateStr = today.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' });
+const hd = document.getElementById('events-date-hd');
+if (hd) hd.textContent = dateStr;
+</script>
+
+</body>
 </html>
+
